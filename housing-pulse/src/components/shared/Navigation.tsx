@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Dashboard" },
-  { href: "/map", label: "GIS Map" },
+  { href: "/", label: "Overview" },
+  { href: "/explore", label: "Find Affordable Areas" },
+  { href: "/research", label: "Research" },
 ];
 
 export default function Navigation() {

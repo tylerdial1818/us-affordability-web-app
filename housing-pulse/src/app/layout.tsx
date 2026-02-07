@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { IncomeProvider } from "@/components/shared/IncomeContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HousingPulse — US Housing Affordability Dashboard",
+  title: "HousingPulse — Find Where You Can Afford to Live",
   description:
-    "Interactive US housing affordability dashboard with national statistics, GIS choropleth maps, and county-level data. Powered by Census ACS and Zillow ZHVI data.",
+    "Interactive US housing affordability tool. Enter your income to see personalized maps of where you can afford to buy a home. Powered by Census ACS and Zillow ZHVI data.",
   keywords: [
     "housing affordability",
     "US housing",
@@ -12,6 +14,7 @@ export const metadata: Metadata = {
     "census data",
     "choropleth map",
     "median home value",
+    "affordable housing",
   ],
 };
 
@@ -34,7 +37,9 @@ export default function RootLayout({
           className="bg-dot-pattern fixed inset-0 pointer-events-none z-0"
           style={{ opacity: 0.4 }}
         />
-        {children}
+        <Suspense>
+          <IncomeProvider>{children}</IncomeProvider>
+        </Suspense>
       </body>
     </html>
   );
