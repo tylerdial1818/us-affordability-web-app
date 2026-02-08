@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Navigation from "@/components/shared/Navigation";
 import { useIncome } from "@/components/shared/IncomeContext";
-import { US_STATES_SVG, STATES_DATA } from "@/lib/data";
+import MapboxChoropleth from "@/components/map/MapboxChoropleth";
+import type { CountyTooltipData } from "@/components/map/MapboxChoropleth";
+import { STATES_DATA } from "@/lib/data";
 import {
   ratioColor,
   budgetColor,
@@ -93,20 +96,13 @@ function getRegion(abbr: string): string {
 // ─── COMPONENT ───────────────────────────────────────────────────
 
 export default function ExplorePage() {
+  const router = useRouter();
   const { income, setIncome, affordablePrice, hasIncome } = useIncome();
   const [animIn, setAnimIn] = useState(false);
   const [incomeInput, setIncomeInput] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [hoveredState, setHoveredState] = useState<string | null>(null);
-  const [tooltip, setTooltip] = useState<{
-    abbr: string;
-    name: string;
-    income: number;
-    value: number;
-    ratio: number;
-    x: number;
-    y: number;
-  } | null>(null);
+  const [tooltip, setTooltip] = useState<CountyTooltipData | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
   // Filters (active state only)
   const [regionFilter, setRegionFilter] = useState("All");
@@ -182,59 +178,22 @@ export default function ExplorePage() {
     return parseInt(digits, 10).toLocaleString();
   }
 
-  // ─── MAP COLORING ────────────────────────────────────────────────
+  // ─── MAP CALLBACKS ─────────────────────────────────────────────
 
-  function getStateColor(abbr: string): string {
-    const s = STATES_DATA.find((st) => st.abbr === abbr);
-    if (!s) return "#f1f5f9";
+  const handleCountyHover = useCallback((data: CountyTooltipData | null) => {
+    setTooltip(data);
+  }, []);
 
-    if (hasIncome && affordablePrice) {
-      return budgetColor(s.value, affordablePrice);
-    }
+  const handleCountyClick = useCallback(
+    (fips: string) => {
+      router.push(`/area/${fips}`);
+    },
+    [router]
+  );
 
-    // No income: standard metric coloring
-    if (
-      s.income < incomeRange[0] * 1000 ||
-      s.income > incomeRange[1] * 1000
-    ) {
-      return "#e2e8f0";
-    }
-
-    if (mapMetric === "ratio") return ratioColor(s.ratio);
-    if (mapMetric === "value") {
-      const v = s.value / 100000;
-      if (v < 2) return "#059669";
-      if (v < 3) return "#10b981";
-      if (v < 4) return "#fbbf24";
-      if (v < 5) return "#f97316";
-      return "#ef4444";
-    }
-    return "#3b82f6";
-  }
-
-  function getStateOpacity(abbr: string): number {
-    const s = STATES_DATA.find((st) => st.abbr === abbr);
-    if (!s) return 0.3;
-
-    if (!hasIncome) {
-      if (
-        s.income < incomeRange[0] * 1000 ||
-        s.income > incomeRange[1] * 1000
-      ) {
-        return 0.15;
-      }
-    }
-    return 1;
-  }
-
-  // ─── PERSONALIZED TOOLTIP DATA ───────────────────────────────────
-
-  function getBudgetStatusForState(stateData: {
-    value: number;
-    ratio: number;
-  }) {
+  function getBudgetStatusForCounty(value: number) {
     if (!affordablePrice) return null;
-    const priceRatio = stateData.value / affordablePrice;
+    const priceRatio = value / affordablePrice;
     if (priceRatio <= 1.0)
       return { label: "Within budget", icon: "\u2713", color: "#059669", bg: "#ecfdf5" };
     if (priceRatio <= 1.3)
@@ -1080,15 +1039,15 @@ export default function ExplorePage() {
                   {hasIncome
                     ? "Your Affordability Map"
                     : mapMetric === "ratio"
-                      ? "Affordability Ratio"
+                      ? "Affordability Ratio by County"
                       : mapMetric === "value"
-                        ? "Median Home Value"
-                        : "Median Household Income"}
+                        ? "Median Home Value by County"
+                        : "Median Household Income by County"}
                 </div>
                 <div style={{ color: "#94a3b8", fontSize: 12 }}>
                   {hasIncome
-                    ? `Personalized for ${formatCurrency(income)} household income`
-                    : "Hover over states for details"}
+                    ? `Personalized for ${formatCurrency(income)} household income · Click a county for details`
+                    : "Hover over counties for details · Click to view area profile"}
                 </div>
               </div>
               <div
@@ -1102,198 +1061,28 @@ export default function ExplorePage() {
                   border: "1px solid #e2e8f0",
                 }}
               >
-                {STATES_DATA.length} states
+                3,222 counties
               </div>
             </div>
 
-            {/* SVG Map */}
+            {/* Mapbox GL Map */}
             <div
+              ref={mapContainerRef}
               style={{
                 flex: 1,
-                padding: 24,
                 position: "relative",
                 minHeight: 500,
               }}
             >
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  height: "100%",
-                }}
-              >
-                <svg
-                  viewBox="0 0 320 165"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    filter:
-                      !hasIncome && !animIn ? "grayscale(1)" : "none",
-                    transition: "filter 0.5s",
-                  }}
-                >
-                  <defs>
-                    <filter id="explore-glow">
-                      <feGaussianBlur
-                        stdDeviation="1.5"
-                        result="blur"
-                      />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  {Object.entries(US_STATES_SVG).map(([abbr, { d }]) => (
-                    <path
-                      key={abbr}
-                      d={d}
-                      fill={getStateColor(abbr)}
-                      stroke={
-                        hoveredState === abbr ? "#0f172a" : "#ffffff"
-                      }
-                      strokeWidth={hoveredState === abbr ? 1.5 : 0.5}
-                      style={{
-                        cursor: "pointer",
-                        transition: "fill 0.3s, stroke-width 0.2s",
-                        filter:
-                          hoveredState === abbr
-                            ? "url(#explore-glow)"
-                            : "none",
-                        opacity: getStateOpacity(abbr),
-                      }}
-                      onMouseEnter={(e) => {
-                        setHoveredState(abbr);
-                        const s = STATES_DATA.find(
-                          (st) => st.abbr === abbr
-                        );
-                        if (s) {
-                          const rect = (
-                            e.target as SVGPathElement
-                          ).getBoundingClientRect();
-                          setTooltip({
-                            abbr: s.abbr,
-                            name: s.name,
-                            income: s.income,
-                            value: s.value,
-                            ratio: s.ratio,
-                            x: rect.left + rect.width / 2,
-                            y: rect.top - 10,
-                          });
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        setHoveredState(null);
-                        setTooltip(null);
-                      }}
-                    />
-                  ))}
-                  {/* Alaska inset */}
-                  <g transform="translate(30,120) scale(0.35)">
-                    <rect
-                      x="-2"
-                      y="-2"
-                      width="60"
-                      height="40"
-                      rx="3"
-                      fill="none"
-                      stroke="#cbd5e1"
-                      strokeWidth="1"
-                      strokeDasharray="2,2"
-                    />
-                    <path
-                      d="M5,25L15,10L30,8L45,15L50,30L35,32L15,30Z"
-                      fill="#f1f5f9"
-                      stroke="#cbd5e1"
-                      strokeWidth="0.5"
-                    />
-                    <text
-                      x="25"
-                      y="38"
-                      textAnchor="middle"
-                      fill="#64748b"
-                      fontSize="6"
-                      fontFamily="monospace"
-                    >
-                      AK
-                    </text>
-                  </g>
-                  {/* Hawaii inset */}
-                  <g transform="translate(85,130) scale(0.35)">
-                    <rect
-                      x="-2"
-                      y="-2"
-                      width="50"
-                      height="30"
-                      rx="3"
-                      fill="none"
-                      stroke="#cbd5e1"
-                      strokeWidth="1"
-                      strokeDasharray="2,2"
-                    />
-                    <circle
-                      cx="12"
-                      cy="14"
-                      r="4"
-                      fill={getStateColor("HI")}
-                      stroke="#cbd5e1"
-                      strokeWidth="0.5"
-                    />
-                    <circle
-                      cx="22"
-                      cy="12"
-                      r="5"
-                      fill={getStateColor("HI")}
-                      stroke="#cbd5e1"
-                      strokeWidth="0.5"
-                    />
-                    <circle
-                      cx="32"
-                      cy="10"
-                      r="3"
-                      fill={getStateColor("HI")}
-                      stroke="#cbd5e1"
-                      strokeWidth="0.5"
-                    />
-                    <text
-                      x="22"
-                      y="26"
-                      textAnchor="middle"
-                      fill="#64748b"
-                      fontSize="6"
-                      fontFamily="monospace"
-                    >
-                      HI
-                    </text>
-                  </g>
-                </svg>
-              </div>
-
-              {/* Demo badge */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 16,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  background: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 10,
-                  padding: "10px 20px",
-                  fontSize: 12,
-                  color: "#94a3b8",
-                  fontFamily: "'DM Mono', monospace",
-                  textAlign: "center",
-                  boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
-                }}
-              >
-                <span style={{ color: "#2563eb" }}>Demo:</span>{" "}
-                State-level preview &middot; Full app uses{" "}
-                <span style={{ color: "#0f172a" }}>
-                  3,100+ county polygons
-                </span>{" "}
-                via Mapbox GL JS
-              </div>
+              <MapboxChoropleth
+                hasIncome={hasIncome}
+                income={income}
+                affordablePrice={affordablePrice}
+                mapMetric={mapMetric}
+                incomeRange={incomeRange}
+                onCountyHover={handleCountyHover}
+                onCountyClick={handleCountyClick}
+              />
             </div>
 
             {/* ──────── ENTRY OVERLAY (no income) ──────── */}
@@ -1640,35 +1429,44 @@ export default function ExplorePage() {
         </div>
       </div>
 
-      {/* ──────── TOOLTIP ──────── */}
-      {tooltip && (
+      {/* ──────── COUNTY TOOLTIP ──────── */}
+      {tooltip && tooltip.ratio && mapContainerRef.current && (
         <div
           style={{
-            position: "fixed",
-            left: tooltip.x,
-            top: tooltip.y,
-            transform: "translate(-50%, -100%)",
+            position: "absolute",
+            left: tooltip.x + (mapContainerRef.current.getBoundingClientRect?.().left || 320),
+            top: tooltip.y + (mapContainerRef.current.getBoundingClientRect?.().top || 65),
+            transform: "translate(-50%, calc(-100% - 12px))",
             background: "#ffffff",
             border: "1px solid #e2e8f0",
             borderRadius: 12,
             padding: "14px 18px",
             pointerEvents: "none",
             zIndex: 1000,
-            minWidth: 240,
+            minWidth: 260,
             boxShadow: "0 20px 60px rgba(0,0,0,0.10)",
           }}
         >
-          {/* State name */}
+          {/* County name */}
           <div
             style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: 700,
               color: "#0f172a",
-              marginBottom: 8,
+              marginBottom: 2,
             }}
           >
             {tooltip.name}
+          </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: "#94a3b8",
+              marginBottom: 10,
+            }}
+          >
+            {tooltip.state}{tooltip.population ? ` · Pop. ${tooltip.population.toLocaleString()}` : ""}
           </div>
 
           {hasIncome && affordablePrice ? (
@@ -1676,7 +1474,7 @@ export default function ExplorePage() {
             <>
               {/* Budget status badge */}
               {(() => {
-                const status = getBudgetStatusForState(tooltip);
+                const status = getBudgetStatusForCounty(tooltip.value);
                 if (!status) return null;
                 return (
                   <div
@@ -1708,9 +1506,7 @@ export default function ExplorePage() {
                 }}
               >
                 <span style={{ color: "#94a3b8" }}>Typical Home</span>
-                <span
-                  style={{ color: "#0f172a", textAlign: "right" }}
-                >
+                <span style={{ color: "#0f172a", textAlign: "right" }}>
                   {formatCurrency(tooltip.value)}
                 </span>
                 <span style={{ color: "#94a3b8" }}>Your Budget</span>
@@ -1734,27 +1530,30 @@ export default function ExplorePage() {
                         : "#dc2626",
                   }}
                 >
-                  {gapText(
-                    affordabilityGap(tooltip.value, income)
-                  )}
+                  {gapText(affordabilityGap(tooltip.value, income))}
                 </span>
                 <span style={{ color: "#94a3b8" }}>Local Income</span>
-                <span
-                  style={{ color: "#0f172a", textAlign: "right" }}
-                >
+                <span style={{ color: "#0f172a", textAlign: "right" }}>
                   {formatCurrency(tooltip.income)}
                 </span>
-                <span style={{ color: "#94a3b8" }}>Unemployment</span>
-                <span
-                  style={{ color: "#0f172a", textAlign: "right" }}
-                >
-                  {/* Approximate from ratio data */}
-                  {tooltip.ratio > 5
-                    ? "3-4%"
-                    : tooltip.ratio > 3
-                      ? "4-5%"
-                      : "5-7%"}
-                </span>
+                {tooltip.unemployment != null && (
+                  <>
+                    <span style={{ color: "#94a3b8" }}>Unemployment</span>
+                    <span style={{ color: "#0f172a", textAlign: "right" }}>
+                      {tooltip.unemployment}%
+                    </span>
+                  </>
+                )}
+              </div>
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 10,
+                  color: "#94a3b8",
+                  textAlign: "center",
+                }}
+              >
+                Click to view full area profile
               </div>
             </>
           ) : (
@@ -1770,15 +1569,11 @@ export default function ExplorePage() {
                 }}
               >
                 <span style={{ color: "#94a3b8" }}>Income</span>
-                <span
-                  style={{ color: "#0f172a", textAlign: "right" }}
-                >
+                <span style={{ color: "#0f172a", textAlign: "right" }}>
                   {formatCurrency(tooltip.income)}
                 </span>
                 <span style={{ color: "#94a3b8" }}>Home Value</span>
-                <span
-                  style={{ color: "#0f172a", textAlign: "right" }}
-                >
+                <span style={{ color: "#0f172a", textAlign: "right" }}>
                   {formatCurrency(tooltip.value)}
                 </span>
                 <span style={{ color: "#94a3b8" }}>Ratio</span>
@@ -1791,6 +1586,14 @@ export default function ExplorePage() {
                 >
                   {tooltip.ratio.toFixed(1)}x
                 </span>
+                {tooltip.unemployment != null && (
+                  <>
+                    <span style={{ color: "#94a3b8" }}>Unemployment</span>
+                    <span style={{ color: "#0f172a", textAlign: "right" }}>
+                      {tooltip.unemployment}%
+                    </span>
+                  </>
+                )}
               </div>
               <div
                 style={{
@@ -1806,6 +1609,16 @@ export default function ExplorePage() {
                 }}
               >
                 {affordabilityStatus(tooltip.ratio).label}
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 10,
+                  color: "#94a3b8",
+                  textAlign: "center",
+                }}
+              >
+                Click to view full area profile
               </div>
             </>
           )}

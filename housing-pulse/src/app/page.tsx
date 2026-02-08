@@ -11,6 +11,7 @@ import {
   STATES_DATA,
   COST_BURDEN_DATA,
   US_STATES_SVG,
+  KPI_SUMMARY,
 } from "@/lib/data";
 import { ratioColor, ratioLabel } from "@/lib/calculations";
 import { formatCurrency, formatPct } from "@/lib/utils";
@@ -196,10 +197,16 @@ function SectionHeading({
 }
 
 // ─── KPI DATA ───────────────────────────────────────────────────
+const fmtCurrency = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
 const KPI_CARDS = [
   {
     label: "Typical Home Price",
-    value: "$365,000",
+    value: fmtCurrency.format(KPI_SUMMARY.nationalMedianHomeValue),
     change: "+4.2%",
     changeUp: true,
     subtitle: "The median value of a US home",
@@ -208,7 +215,7 @@ const KPI_CARDS = [
   },
   {
     label: "Typical Household Income",
-    value: "$78,500",
+    value: fmtCurrency.format(KPI_SUMMARY.nationalMedianIncome),
     change: "+3.1%",
     changeUp: true,
     subtitle: "Half of US households earn more, half less",
@@ -217,17 +224,16 @@ const KPI_CARDS = [
   },
   {
     label: "Affordability Ratio",
-    value: "4.3x",
+    value: `${KPI_SUMMARY.nationalRatio}x`,
     change: "+0.2x",
     changeUp: true,
-    subtitle:
-      "Home prices are 4.3 years of income \u2014 above the recommended 3x",
+    subtitle: `Home prices are ${KPI_SUMMARY.nationalRatio} years of income \u2014 above the recommended 3x`,
     term: "Affordability Ratio",
     accentColor: "#f59e0b",
   },
   {
     label: "Cost-Burdened Households",
-    value: "31%",
+    value: `${KPI_SUMMARY.avgCostBurdenedRenters}%`,
     change: "+1.4pp",
     changeUp: true,
     subtitle:
@@ -424,7 +430,7 @@ export default function OverviewPage() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              4.3x
+              {KPI_SUMMARY.nationalRatio}x
             </span>{" "}
             the median household income
           </h1>

@@ -6,7 +6,7 @@ import Navigation from "@/components/shared/Navigation";
 import Footer from "@/components/shared/Footer";
 import { useIncome } from "@/components/shared/IncomeContext";
 import AffordabilityBadge from "@/components/shared/AffordabilityBadge";
-import { getMockCountyData, US_STATES_SVG } from "@/lib/data";
+import { US_STATES_SVG } from "@/lib/data";
 import {
   formatCurrency,
   formatPct,
@@ -31,6 +31,25 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+
+/* ─── State Name → Abbreviation Mapping ───────────────────────── */
+
+const STATE_ABBR: Record<string, string> = {
+  Alabama: "AL", Alaska: "AK", Arizona: "AZ", Arkansas: "AR",
+  California: "CA", Colorado: "CO", Connecticut: "CT", Delaware: "DE",
+  "District of Columbia": "DC", Florida: "FL", Georgia: "GA", Hawaii: "HI",
+  Idaho: "ID", Illinois: "IL", Indiana: "IN", Iowa: "IA",
+  Kansas: "KS", Kentucky: "KY", Louisiana: "LA", Maine: "ME",
+  Maryland: "MD", Massachusetts: "MA", Michigan: "MI", Minnesota: "MN",
+  Mississippi: "MS", Missouri: "MO", Montana: "MT", Nebraska: "NE",
+  Nevada: "NV", "New Hampshire": "NH", "New Jersey": "NJ", "New Mexico": "NM",
+  "New York": "NY", "North Carolina": "NC", "North Dakota": "ND", Ohio: "OH",
+  Oklahoma: "OK", Oregon: "OR", Pennsylvania: "PA", "Puerto Rico": "PR",
+  "Rhode Island": "RI", "South Carolina": "SC", "South Dakota": "SD",
+  Tennessee: "TN", Texas: "TX", Utah: "UT", Vermont: "VT",
+  Virginia: "VA", Washington: "WA", "West Virginia": "WV",
+  Wisconsin: "WI", Wyoming: "WY",
+};
 
 /* ─── Shared Style Objects ─────────────────────────────────────── */
 
@@ -104,13 +123,118 @@ export default function AreaProfilePage({
   const { fips } = use(params);
   const [animIn, setAnimIn] = useState(false);
   const { income, hasIncome, affordablePrice } = useIncome();
+  const [county, setCounty] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [stateAvgs, setStateAvgs] = useState<{
+    income: number;
+    value: number;
+    ratio: number;
+  }>({ income: 62100, value: 200000, ratio: 4.3 });
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimIn(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
-  const county = getMockCountyData(fips);
+  useEffect(() => {
+    setLoading(true);
+    fetch("/data/counties_acs.json")
+      .then((res) => res.json())
+      .then((data: Record<string, any>) => {
+        const raw = data[fips];
+        if (raw) {
+          const abbr = STATE_ABBR[raw.state] || "";
+          setCounty({
+            ...raw,
+            state_abbr: abbr,
+          });
+
+          // Compute state averages from all counties in the same state
+          const sameState = Object.values(data).filter(
+            (c: any) => c.state === raw.state
+          );
+          const count = sameState.length;
+          if (count > 0) {
+            const avgIncome =
+              sameState.reduce(
+                (s: number, c: any) => s + (c.median_household_income || 0),
+                0
+              ) / count;
+            const avgValue =
+              sameState.reduce(
+                (s: number, c: any) => s + (c.median_home_value || 0),
+                0
+              ) / count;
+            const avgRatio =
+              sameState.reduce(
+                (s: number, c: any) => s + (c.affordability_ratio || 0),
+                0
+              ) / count;
+            setStateAvgs({
+              income: Math.round(avgIncome),
+              value: Math.round(avgValue),
+              ratio: Math.round(avgRatio * 10) / 10,
+            });
+          }
+        } else {
+          setCounty(null);
+        }
+      })
+      .catch(() => {
+        setCounty(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [fips]);
+
+  /* ── Loading State ───────────────────────────────────────────── */
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          background: "#f8fafc",
+          minHeight: "100vh",
+          fontFamily: "'DM Sans', sans-serif",
+          color: "#0f172a",
+        }}
+      >
+        <Navigation />
+        <div
+          style={{
+            maxWidth: 1360,
+            margin: "0 auto",
+            padding: "120px 32px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              display: "inline-block",
+              width: 40,
+              height: 40,
+              border: "3px solid #e2e8f0",
+              borderTopColor: "#3b82f6",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+            }}
+          />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <div
+            style={{
+              marginTop: 16,
+              fontSize: 14,
+              color: "#94a3b8",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Loading area data...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   /* ── Not Found State ──────────────────────────────────────────── */
 
@@ -193,9 +317,9 @@ export default function AreaProfilePage({
 
   const trendData = generateAreaTrend(county.median_home_value || 300000);
 
-  const stateAvgIncome = county.state_abbr === "CA" ? 80440 : 62100;
-  const stateAvgValue = county.state_abbr === "CA" ? 659000 : 118000;
-  const stateAvgRatio = county.state_abbr === "CA" ? 8.2 : 1.9;
+  const stateAvgIncome = stateAvgs.income;
+  const stateAvgValue = stateAvgs.value;
+  const stateAvgRatio = stateAvgs.ratio;
 
   const comparisonData = [
     {
