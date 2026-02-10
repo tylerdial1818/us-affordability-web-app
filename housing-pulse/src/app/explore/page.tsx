@@ -116,6 +116,7 @@ export default function ExplorePage() {
   // No-income fallback controls
   const [mapMetric, setMapMetric] = useState("ratio");
   const [incomeRange, setIncomeRange] = useState<[number, number]>([20, 160]);
+  const [viewMode, setViewMode] = useState<"rent" | "buy">("buy");
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimIn(true), 100);
@@ -754,6 +755,69 @@ export default function ExplorePage() {
             ) : (
               /* ── NON-PERSONALIZED SIDEBAR (MapControls pattern) ── */
               <>
+                {/* View Mode Toggle */}
+                <div style={cardStyle}>
+                  <div style={sheenStyle} />
+                  <div style={sectionTitleStyle}>View Mode</div>
+                  <div
+                    style={{
+                      color: "#94a3b8",
+                      fontSize: 12,
+                      marginBottom: 12,
+                      marginTop: -4,
+                    }}
+                  >
+                    Switch between rent and home value
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 8,
+                      background: "#f1f5f9",
+                      padding: 4,
+                      borderRadius: 10,
+                    }}
+                  >
+                    <button
+                      onClick={() => setViewMode("buy")}
+                      style={{
+                        padding: "10px 16px",
+                        borderRadius: 8,
+                        border: "none",
+                        background: viewMode === "buy" ? "#ffffff" : "transparent",
+                        color: viewMode === "buy" ? "#0f172a" : "#64748b",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        boxShadow: viewMode === "buy" ? "0 2px 4px rgba(0,0,0,0.06)" : "none",
+                        fontFamily: "'DM Sans', sans-serif",
+                      }}
+                    >
+                      🏠 Buy
+                    </button>
+                    <button
+                      onClick={() => setViewMode("rent")}
+                      style={{
+                        padding: "10px 16px",
+                        borderRadius: 8,
+                        border: "none",
+                        background: viewMode === "rent" ? "#ffffff" : "transparent",
+                        color: viewMode === "rent" ? "#0f172a" : "#64748b",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        boxShadow: viewMode === "rent" ? "0 2px 4px rgba(0,0,0,0.06)" : "none",
+                        fontFamily: "'DM Sans', sans-serif",
+                      }}
+                    >
+                      🔑 Rent
+                    </button>
+                  </div>
+                </div>
+
                 {/* Metric Selector */}
                 <div style={cardStyle}>
                   <div style={sheenStyle} />
@@ -1080,6 +1144,7 @@ export default function ExplorePage() {
                 affordablePrice={affordablePrice}
                 mapMetric={mapMetric}
                 incomeRange={incomeRange}
+                viewMode={viewMode}
                 onCountyHover={handleCountyHover}
                 onCountyClick={handleCountyClick}
               />
@@ -1559,66 +1624,190 @@ export default function ExplorePage() {
           ) : (
             /* ── STANDARD TOOLTIP ── */
             <>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "6px 16px",
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: 12,
-                }}
-              >
-                <span style={{ color: "#94a3b8" }}>Income</span>
-                <span style={{ color: "#0f172a", textAlign: "right" }}>
-                  {formatCurrency(tooltip.income)}
-                </span>
-                <span style={{ color: "#94a3b8" }}>Home Value</span>
-                <span style={{ color: "#0f172a", textAlign: "right" }}>
-                  {formatCurrency(tooltip.value)}
-                </span>
-                <span style={{ color: "#94a3b8" }}>Ratio</span>
-                <span
-                  style={{
-                    textAlign: "right",
-                    fontWeight: 700,
-                    color: ratioColor(tooltip.ratio),
-                  }}
-                >
-                  {tooltip.ratio.toFixed(1)}x
-                </span>
-                {tooltip.unemployment != null && (
-                  <>
-                    <span style={{ color: "#94a3b8" }}>Unemployment</span>
+              {viewMode === "rent" ? (
+                /* Rent View */
+                <>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "6px 16px",
+                      fontFamily: "'DM Mono', monospace",
+                      fontSize: 12,
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Median Rent</span>
                     <span style={{ color: "#0f172a", textAlign: "right" }}>
-                      {tooltip.unemployment}%
+                      {tooltip.rent ? `$${tooltip.rent.toLocaleString()}/mo` : "N/A"}
                     </span>
-                  </>
-                )}
-              </div>
+                    <span style={{ color: "#94a3b8" }}>Annual Rent</span>
+                    <span style={{ color: "#0f172a", textAlign: "right" }}>
+                      {tooltip.rent ? formatCurrency(tooltip.rent * 12) : "N/A"}
+                    </span>
+                    <span style={{ color: "#94a3b8" }}>Rent-to-Income</span>
+                    <span
+                      style={{
+                        textAlign: "right",
+                        fontWeight: 700,
+                        color: tooltip.rentRatio
+                          ? tooltip.rentRatio < 30
+                            ? "#059669"
+                            : tooltip.rentRatio < 40
+                            ? "#f97316"
+                            : "#ef4444"
+                          : "#64748b",
+                      }}
+                    >
+                      {tooltip.rentRatio ? `${tooltip.rentRatio.toFixed(1)}%` : "N/A"}
+                    </span>
+                  </div>
+                  {tooltip.rentRatio && (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        padding: "4px 8px",
+                        borderRadius: 6,
+                        background:
+                          tooltip.rentRatio < 30
+                            ? "#05966920"
+                            : tooltip.rentRatio < 40
+                            ? "#f9731620"
+                            : "#ef444420",
+                        color:
+                          tooltip.rentRatio < 30
+                            ? "#059669"
+                            : tooltip.rentRatio < 40
+                            ? "#f97316"
+                            : "#ef4444",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        textAlign: "center",
+                        fontFamily: "'DM Mono', monospace",
+                      }}
+                    >
+                      {tooltip.rentRatio < 30
+                        ? "✓ Affordable"
+                        : tooltip.rentRatio < 40
+                        ? "⚠ Cost-Burdened"
+                        : "⚠ Severely Burdened"}
+                    </div>
+                  )}
+                  <div
+                    style={{
+                      marginTop: 12,
+                      paddingTop: 12,
+                      borderTop: "1px solid #e2e8f0",
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "6px 16px",
+                      fontFamily: "'DM Mono', monospace",
+                      fontSize: 11,
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Median Income</span>
+                    <span style={{ color: "#0f172a", textAlign: "right" }}>
+                      {formatCurrency(tooltip.income)}
+                    </span>
+                    {tooltip.unemployment != null && (
+                      <>
+                        <span style={{ color: "#94a3b8" }}>Unemployment</span>
+                        <span style={{ color: "#0f172a", textAlign: "right" }}>
+                          {tooltip.unemployment.toFixed(1)}%
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </>
+              ) : (
+                /* Buy View */
+                <>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "6px 16px",
+                      fontFamily: "'DM Mono', monospace",
+                      fontSize: 12,
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Income</span>
+                    <span style={{ color: "#0f172a", textAlign: "right" }}>
+                      {formatCurrency(tooltip.income)}
+                    </span>
+                    <span style={{ color: "#94a3b8" }}>Home Value</span>
+                    <span style={{ color: "#0f172a", textAlign: "right" }}>
+                      {formatCurrency(tooltip.value)}
+                    </span>
+                    <span style={{ color: "#94a3b8" }}>Ratio</span>
+                    <span
+                      style={{
+                        textAlign: "right",
+                        fontWeight: 700,
+                        color: ratioColor(tooltip.ratio),
+                      }}
+                    >
+                      {tooltip.ratio.toFixed(1)}x
+                    </span>
+                    {tooltip.unemployment != null && (
+                      <>
+                        <span style={{ color: "#94a3b8" }}>Unemployment</span>
+                        <span style={{ color: "#0f172a", textAlign: "right" }}>
+                          {tooltip.unemployment}%
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      padding: "4px 8px",
+                      borderRadius: 6,
+                      background: ratioColor(tooltip.ratio) + "20",
+                      color: ratioColor(tooltip.ratio),
+                      fontSize: 11,
+                      fontWeight: 600,
+                      textAlign: "center",
+                      fontFamily: "'DM Mono', monospace",
+                    }}
+                  >
+                    {affordabilityStatus(tooltip.ratio).label}
+                  </div>
+                </>
+              )}
+              
+              {/* Zillow Link */}
+              <a
+                href={`https://www.zillow.com/homes/${encodeURIComponent(tooltip.name + ", " + tooltip.state)}_rb/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block",
+                  marginTop: 12,
+                  padding: "8px 12px",
+                  background: "#3b82f6",
+                  color: "#ffffff",
+                  textAlign: "center",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "#2563eb"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "#3b82f6"}
+              >
+                View on Zillow →
+              </a>
+              
               <div
                 style={{
                   marginTop: 8,
-                  padding: "4px 8px",
-                  borderRadius: 6,
-                  background: ratioColor(tooltip.ratio) + "20",
-                  color: ratioColor(tooltip.ratio),
-                  fontSize: 11,
-                  fontWeight: 600,
-                  textAlign: "center",
-                  fontFamily: "'DM Mono', monospace",
-                }}
-              >
-                {affordabilityStatus(tooltip.ratio).label}
-              </div>
-              <div
-                style={{
-                  marginTop: 6,
                   fontSize: 10,
                   color: "#94a3b8",
                   textAlign: "center",
                 }}
               >
-                Click to view full area profile
+                Click county to view full profile
               </div>
             </>
           )}

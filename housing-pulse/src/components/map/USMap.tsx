@@ -7,9 +7,10 @@ import { ratioColor, ratioLabel, formatCurrency } from "@/lib/utils";
 interface USMapProps {
   selectedMetric: string;
   incomeRange: [number, number];
+  viewMode: "rent" | "buy";
 }
 
-export default function USMap({ selectedMetric, incomeRange }: USMapProps) {
+export default function USMap({ selectedMetric, incomeRange, viewMode }: USMapProps) {
   const [hoveredState, setHoveredState] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{
     name: string;

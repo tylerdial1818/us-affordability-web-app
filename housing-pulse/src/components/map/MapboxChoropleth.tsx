@@ -22,6 +22,8 @@ export interface CountyTooltipData {
   income: number;
   value: number;
   ratio: number;
+  rent: number | null;
+  rentRatio: number | null;
   population: number;
   unemployment: number | null;
   costBurden: number | null;
@@ -35,6 +37,7 @@ interface Props {
   affordablePrice: number | null;
   mapMetric: string;
   incomeRange: [number, number];
+  viewMode: "rent" | "buy";
   onCountyHover: (data: CountyTooltipData | null) => void;
   onCountyClick: (fips: string) => void;
 }
@@ -128,6 +131,33 @@ function buildBudgetColorExpr(affordablePrice: number): mapboxgl.Expression {
   ];
 }
 
+function buildRentRatioColorExpr(): mapboxgl.Expression {
+  return [
+    "case",
+    ["==", ["get", "rent_ratio"], null],
+    "#e2e8f0",
+    [
+      "interpolate",
+      ["linear"],
+      ["get", "rent_ratio"],
+      0,
+      "#059669",      // 0-15%: Very affordable
+      15,
+      "#059669",
+      25,
+      "#10b981",     // 15-25%: Affordable
+      30,
+      "#fbbf24",     // 25-30%: Moderate (at HUD threshold)
+      35,
+      "#f97316",     // 30-35%: Cost-burdened
+      40,
+      "#ef4444",     // 35-40%: Severely burdened
+      50,
+      "#dc2626",     // 40%+: Extremely burdened
+    ],
+  ];
+}
+
 // ─── COMPONENT ──────────────────────────────────────────────────
 
 export default function MapboxChoropleth({
@@ -136,6 +166,7 @@ export default function MapboxChoropleth({
   affordablePrice,
   mapMetric,
   incomeRange,
+  viewMode,
   onCountyHover,
   onCountyClick,
 }: Props) {
@@ -254,6 +285,11 @@ export default function MapboxChoropleth({
             const fips = String(feat.id).padStart(5, "0");
             const data = countyData[fips];
             if (data) {
+              // Calculate rent-to-income ratio (as percentage)
+              const rentRatio = data.median_gross_rent && data.median_household_income
+                ? ((data.median_gross_rent * 12) / data.median_household_income) * 100
+                : null;
+              
               feat.properties = {
                 fips,
                 name: data.county_name || data.name || "",
@@ -261,6 +297,8 @@ export default function MapboxChoropleth({
                 affordability_ratio: data.affordability_ratio,
                 median_home_value: data.median_home_value,
                 median_household_income: data.median_household_income,
+                median_gross_rent: data.median_gross_rent,
+                rent_ratio: rentRatio,
                 population: data.population,
                 unemployment_rate: data.unemployment_rate,
                 pct_cost_burdened_renters: data.pct_cost_burdened_renters,
@@ -402,6 +440,8 @@ export default function MapboxChoropleth({
           income: props.median_household_income,
           value: props.median_home_value,
           ratio: props.affordability_ratio,
+          rent: props.median_gross_rent,
+          rentRatio: props.rent_ratio,
           population: props.population,
           unemployment: props.unemployment_rate,
           costBurden: props.pct_cost_burdened_renters,
@@ -440,7 +480,10 @@ export default function MapboxChoropleth({
 
     let colorExpr: any;
 
-    if (hasIncome && affordablePrice) {
+    // Rent view overrides all other metrics
+    if (viewMode === "rent") {
+      colorExpr = buildRentRatioColorExpr();
+    } else if (hasIncome && affordablePrice) {
       colorExpr = buildBudgetColorExpr(affordablePrice);
     } else {
       switch (mapMetric) {
@@ -481,7 +524,7 @@ export default function MapboxChoropleth({
         0.15,
       ] as any);
     }
-  }, [hasIncome, affordablePrice, mapMetric, incomeRange, dataLoaded]);
+  }, [hasIncome, affordablePrice, mapMetric, incomeRange, viewMode, dataLoaded]);
 
   // ─── RESET VIEW HANDLER ─────────────────────────────────────────
 
