@@ -34,6 +34,8 @@ interface MapControlsProps {
   onMetricChange: (metric: string) => void;
   incomeRange: [number, number];
   onIncomeRangeChange: (range: [number, number]) => void;
+  viewMode: "rent" | "buy";
+  onViewModeChange: (mode: "rent" | "buy") => void;
 }
 
 export default function MapControls({
@@ -41,6 +43,8 @@ export default function MapControls({
   onMetricChange,
   incomeRange,
   onIncomeRangeChange,
+  viewMode,
+  onViewModeChange,
 }: MapControlsProps) {
   // Simplified metric options for the demo (matching the demo JSX)
   const metricOptions = [
@@ -51,6 +55,60 @@ export default function MapControls({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* View Mode Toggle */}
+      <div style={cardStyle}>
+        <div style={sheenStyle} />
+        <div style={sectionTitleStyle}>View Mode</div>
+        <div style={{ color: "#94a3b8", fontSize: 12, marginBottom: 12 }}>
+          Switch between rent and home value
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 8,
+            background: "#f1f5f9",
+            padding: 4,
+            borderRadius: 10,
+          }}
+        >
+          <button
+            onClick={() => onViewModeChange("buy")}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 8,
+              border: "none",
+              background: viewMode === "buy" ? "#ffffff" : "transparent",
+              color: viewMode === "buy" ? "#0f172a" : "#64748b",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s",
+              boxShadow: viewMode === "buy" ? "0 2px 4px rgba(0,0,0,0.06)" : "none",
+            }}
+          >
+            🏠 Buy
+          </button>
+          <button
+            onClick={() => onViewModeChange("rent")}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 8,
+              border: "none",
+              background: viewMode === "rent" ? "#ffffff" : "transparent",
+              color: viewMode === "rent" ? "#0f172a" : "#64748b",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s",
+              boxShadow: viewMode === "rent" ? "0 2px 4px rgba(0,0,0,0.06)" : "none",
+            }}
+          >
+            🔑 Rent
+          </button>
+        </div>
+      </div>
+
       {/* Metric Selector */}
       <div style={cardStyle}>
         <div style={sheenStyle} />
@@ -166,7 +224,9 @@ export default function MapControls({
               height: 12,
               borderRadius: 6,
               background:
-                selectedMetric === "income"
+                viewMode === "rent"
+                  ? "linear-gradient(90deg, #059669 0%, #10b981 30%, #fbbf24 50%, #f97316 70%, #ef4444 100%)"
+                  : selectedMetric === "income"
                   ? "linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #93c5fd 100%)"
                   : "linear-gradient(90deg, #059669 0%, #10b981 25%, #fbbf24 50%, #f97316 75%, #ef4444 100%)",
               marginBottom: 6,
@@ -181,7 +241,13 @@ export default function MapControls({
               fontFamily: "'DM Mono', monospace",
             }}
           >
-            {selectedMetric === "ratio" ? (
+            {viewMode === "rent" ? (
+              <>
+                <span>Affordable (&lt;25%)</span>
+                <span>Moderate (30%)</span>
+                <span>Burdened (40%+)</span>
+              </>
+            ) : selectedMetric === "ratio" ? (
               <>
                 <span>Affordable (2x)</span>
                 <span>Moderate</span>
@@ -216,8 +282,9 @@ export default function MapControls({
           Pro Tip
         </div>
         <div style={{ fontSize: 12, color: "#1e40af", lineHeight: 1.6 }}>
-          Drag the income sliders to reveal which areas are affordable for a
-          specific income bracket. States outside the range will dim.
+          {viewMode === "rent"
+            ? "Toggle to Rent view to see which areas have affordable rents. Green means less than 30% of income goes to rent."
+            : "Drag the income sliders to reveal which areas are affordable for a specific income bracket. States outside the range will dim."}
         </div>
       </div>
     </div>

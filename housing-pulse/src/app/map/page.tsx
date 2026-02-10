@@ -10,6 +10,7 @@ export default function MapPage() {
   const [animIn, setAnimIn] = useState(false);
   const [mapMetric, setMapMetric] = useState("ratio");
   const [incomeRange, setIncomeRange] = useState<[number, number]>([20, 160]);
+  const [viewMode, setViewMode] = useState<"rent" | "buy">("buy");
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimIn(true), 100);
@@ -65,6 +66,8 @@ export default function MapPage() {
             onMetricChange={setMapMetric}
             incomeRange={incomeRange}
             onIncomeRangeChange={setIncomeRange}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
           />
 
           {/* Map Area */}
@@ -95,11 +98,13 @@ export default function MapPage() {
                     color: "#0f172a",
                   }}
                 >
-                  {mapMetric === "ratio"
-                    ? "Affordability Ratio"
-                    : mapMetric === "value"
-                      ? "Median Home Value"
-                      : "Median Household Income"}
+                  {viewMode === "rent"
+                    ? "Rent Affordability"
+                    : mapMetric === "ratio"
+                      ? "Home Value Affordability Ratio"
+                      : mapMetric === "value"
+                        ? "Median Home Value"
+                        : "Median Household Income"}
                 </div>
                 <div style={{ color: "#94a3b8", fontSize: 12 }}>
                   Hover over states for details · Production version uses
@@ -128,7 +133,11 @@ export default function MapPage() {
                 position: "relative",
               }}
             >
-              <USMap selectedMetric={mapMetric} incomeRange={incomeRange} />
+              <USMap 
+                selectedMetric={mapMetric} 
+                incomeRange={incomeRange}
+                viewMode={viewMode}
+              />
               {/* Demo overlay */}
               <div
                 style={{
