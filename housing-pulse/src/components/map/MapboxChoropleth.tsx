@@ -160,19 +160,39 @@ export default function MapboxChoropleth({
 
       mapboxgl.accessToken = MAPBOX_TOKEN;
 
+      // Restore saved map position or use defaults
+      const savedPosition = typeof window !== 'undefined' 
+        ? localStorage.getItem('housing-pulse-map-position')
+        : null;
+      
+      let initialCenter: [number, number] = [-97, 39];
+      let initialZoom = 3.8;
+
+      if (savedPosition) {
+        try {
+          const { center, zoom } = JSON.parse(savedPosition);
+          initialCenter = center;
+          initialZoom = zoom;
+        } catch (e) {
+          console.warn('Could not restore map position:', e);
+        }
+      }
+
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
-        center: [-97, 39],
-        zoom: 3.8,
+        center: initialCenter,
+        zoom: initialZoom,
         minZoom: 2.5,
         maxZoom: 12,
         maxBounds: [
-          [-170, 15],
-          [-50, 72],
+          [-180, 10],  // Expanded bounds for smoother panning
+          [-40, 75],
         ],
         projection: "mercator",
         attributionControl: false,
+        dragRotate: false,  // Disable rotation for cleaner UX
+        touchZoomRotate: false,
       });
 
       map.addControl(
@@ -185,6 +205,24 @@ export default function MapboxChoropleth({
       );
 
       mapRef.current = map;
+
+      // Save map position on move/zoom
+      const savePosition = () => {
+        if (typeof window !== 'undefined' && map) {
+          const center = map.getCenter();
+          const zoom = map.getZoom();
+          localStorage.setItem(
+            'housing-pulse-map-position',
+            JSON.stringify({
+              center: [center.lng, center.lat],
+              zoom
+            })
+          );
+        }
+      };
+
+      map.on('moveend', savePosition);
+      map.on('zoomend', savePosition);
 
       map.on("load", async () => {
         if (cancelled) return;
@@ -445,6 +483,24 @@ export default function MapboxChoropleth({
     }
   }, [hasIncome, affordablePrice, mapMetric, incomeRange, dataLoaded]);
 
+  // ─── RESET VIEW HANDLER ─────────────────────────────────────────
+
+  const resetView = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    
+    map.flyTo({
+      center: [-97, 39],
+      zoom: 3.8,
+      duration: 1200,
+    });
+    
+    // Clear saved position
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('housing-pulse-map-position');
+    }
+  }, []);
+
   // ─── RENDER ─────────────────────────────────────────────────────
 
   return (
@@ -453,6 +509,59 @@ export default function MapboxChoropleth({
         ref={mapContainer}
         style={{ width: "100%", height: "100%", borderRadius: 0 }}
       />
+
+      {/* Reset View Button */}
+      {dataLoaded && (
+        <button
+          onClick={resetView}
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: 8,
+            padding: "8px 16px",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#3b82f6",
+            fontFamily: "'DM Sans', sans-serif",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            cursor: "pointer",
+            zIndex: 2,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#3b82f6";
+            e.currentTarget.style.color = "#ffffff";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#ffffff";
+            e.currentTarget.style.color = "#3b82f6";
+          }}
+          title="Reset map to full US view"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+            <path d="M3 21v-5h5" />
+          </svg>
+          Reset View
+        </button>
+      )}
 
       {/* Loading state */}
       {!dataLoaded && (
