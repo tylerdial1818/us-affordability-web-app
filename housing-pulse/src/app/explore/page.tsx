@@ -117,6 +117,12 @@ export default function ExplorePage() {
   const [mapMetric, setMapMetric] = useState("ratio");
   const [incomeRange, setIncomeRange] = useState<[number, number]>([20, 160]);
   const [viewMode, setViewMode] = useState<"rent" | "buy">("buy");
+  
+  // Filters
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [maxRent, setMaxRent] = useState<number | null>(null);
+  const [hideUnemployment, setHideUnemployment] = useState(false);
+  const [showImprovingOnly, setShowImprovingOnly] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimIn(true), 100);
@@ -970,6 +976,159 @@ export default function ExplorePage() {
                   </div>
                 </div>
 
+                {/* Filters */}
+                <div style={cardStyle}>
+                  <div style={sheenStyle} />
+                  <div style={sectionTitleStyle}>Filters</div>
+                  <div
+                    style={{
+                      color: "#94a3b8",
+                      fontSize: 12,
+                      marginBottom: 16,
+                      marginTop: -4,
+                    }}
+                  >
+                    Narrow down your search
+                  </div>
+
+                  {/* Max Price/Rent Slider */}
+                  {viewMode === "buy" ? (
+                    <div style={{ marginBottom: 16 }}>
+                      <label
+                        style={{
+                          fontSize: 11,
+                          color: "#64748b",
+                          display: "block",
+                          marginBottom: 8,
+                        }}
+                      >
+                        Max Home Price
+                      </label>
+                      <input
+                        type="range"
+                        min={50000}
+                        max={1000000}
+                        step={50000}
+                        value={maxPrice || 1000000}
+                        onChange={(e) =>
+                          setMaxPrice(+e.target.value === 1000000 ? null : +e.target.value)
+                        }
+                        style={{ width: "100%", accentColor: "#3b82f6" }}
+                      />
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "#0f172a",
+                          fontWeight: 600,
+                          marginTop: 4,
+                          fontFamily: "'DM Mono', monospace",
+                        }}
+                      >
+                        {maxPrice ? formatCurrency(maxPrice) : "No limit"}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ marginBottom: 16 }}>
+                      <label
+                        style={{
+                          fontSize: 11,
+                          color: "#64748b",
+                          display: "block",
+                          marginBottom: 8,
+                        }}
+                      >
+                        Max Monthly Rent
+                      </label>
+                      <input
+                        type="range"
+                        min={500}
+                        max={5000}
+                        step={100}
+                        value={maxRent || 5000}
+                        onChange={(e) =>
+                          setMaxRent(+e.target.value === 5000 ? null : +e.target.value)
+                        }
+                        style={{ width: "100%", accentColor: "#3b82f6" }}
+                      />
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "#0f172a",
+                          fontWeight: 600,
+                          marginTop: 4,
+                          fontFamily: "'DM Mono', monospace",
+                        }}
+                      >
+                        {maxRent ? `$${maxRent.toLocaleString()}/mo` : "No limit"}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Checkboxes */}
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      cursor: "pointer",
+                      marginBottom: 12,
+                      fontSize: 13,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={hideUnemployment}
+                      onChange={(e) => setHideUnemployment(e.target.checked)}
+                      style={{ accentColor: "#3b82f6" }}
+                    />
+                    <span>Hide high unemployment areas (&gt;6%)</span>
+                  </label>
+
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      cursor: "pointer",
+                      fontSize: 13,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={showImprovingOnly}
+                      onChange={(e) => setShowImprovingOnly(e.target.checked)}
+                      style={{ accentColor: "#3b82f6" }}
+                    />
+                    <span>Only show improving markets ↗</span>
+                  </label>
+
+                  {(maxPrice || maxRent || hideUnemployment || showImprovingOnly) && (
+                    <button
+                      onClick={() => {
+                        setMaxPrice(null);
+                        setMaxRent(null);
+                        setHideUnemployment(false);
+                        setShowImprovingOnly(false);
+                      }}
+                      style={{
+                        marginTop: 16,
+                        width: "100%",
+                        padding: "8px",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: 6,
+                        background: "#ffffff",
+                        color: "#64748b",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        fontFamily: "'DM Sans', sans-serif",
+                      }}
+                    >
+                      Clear all filters
+                    </button>
+                  )}
+                </div>
+
                 {/* Legend */}
                 <div style={cardStyle}>
                   <div style={sheenStyle} />
@@ -1090,28 +1249,84 @@ export default function ExplorePage() {
                 background: "#ffffff",
               }}
             >
-              <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                {/* Rent/Buy Toggle - Prominent */}
                 <div
                   style={{
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontSize: 20,
-                    fontWeight: 700,
-                    marginBottom: 4,
-                    color: "#0f172a",
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 4,
+                    background: "#f1f5f9",
+                    padding: 3,
+                    borderRadius: 8,
+                    border: "1px solid #e2e8f0",
                   }}
                 >
-                  {hasIncome
-                    ? "Your Affordability Map"
-                    : mapMetric === "ratio"
-                      ? "Affordability Ratio by County"
-                      : mapMetric === "value"
-                        ? "Median Home Value by County"
-                        : "Median Household Income by County"}
+                  <button
+                    onClick={() => setViewMode("buy")}
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: 6,
+                      border: "none",
+                      background: viewMode === "buy" ? "#ffffff" : "transparent",
+                      color: viewMode === "buy" ? "#0f172a" : "#64748b",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      boxShadow: viewMode === "buy" ? "0 2px 4px rgba(0,0,0,0.08)" : "none",
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    🏠 Buy
+                  </button>
+                  <button
+                    onClick={() => setViewMode("rent")}
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: 6,
+                      border: "none",
+                      background: viewMode === "rent" ? "#ffffff" : "transparent",
+                      color: viewMode === "rent" ? "#0f172a" : "#64748b",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      boxShadow: viewMode === "rent" ? "0 2px 4px rgba(0,0,0,0.08)" : "none",
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    🔑 Rent
+                  </button>
                 </div>
-                <div style={{ color: "#94a3b8", fontSize: 12 }}>
-                  {hasIncome
-                    ? `Personalized for ${formatCurrency(income)} household income · Click a county for details`
-                    : "Hover over counties for details · Click to view area profile"}
+                
+                <div>
+                  <div
+                    style={{
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      fontSize: 20,
+                      fontWeight: 700,
+                      marginBottom: 4,
+                      color: "#0f172a",
+                    }}
+                  >
+                    {viewMode === "rent"
+                      ? "Rent Affordability by County"
+                      : hasIncome
+                        ? "Your Home Affordability Map"
+                        : mapMetric === "ratio"
+                          ? "Home Affordability Ratio by County"
+                          : mapMetric === "value"
+                            ? "Median Home Value by County"
+                            : "Median Household Income by County"}
+                  </div>
+                  <div style={{ color: "#94a3b8", fontSize: 12 }}>
+                    {viewMode === "rent"
+                      ? "Green = affordable (<30% income) · Yellow = moderate · Red = cost-burdened (>40%)"
+                      : hasIncome
+                        ? `Personalized for ${formatCurrency(income)} household income · Click a county for details`
+                        : "Hover over counties for details · Click to view area profile"}
+                  </div>
                 </div>
               </div>
               <div
