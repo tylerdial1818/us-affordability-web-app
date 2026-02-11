@@ -1135,7 +1135,8 @@ export default function ExplorePage() {
               style={{
                 flex: 1,
                 position: "relative",
-                minHeight: 500,
+                height: "calc(100vh - 65px - 56px)", // viewport - nav - map header
+                minHeight: 400,
               }}
             >
               <MapboxChoropleth
