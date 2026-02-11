@@ -1693,6 +1693,35 @@ export default function ExplorePage() {
                         : "⚠ Severely Burdened"}
                     </div>
                   )}
+                  
+                  {/* Trend Indicator */}
+                  {tooltip.trend && tooltip.trend.affordability !== null && (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        padding: "6px 10px",
+                        borderRadius: 6,
+                        background: "#f8fafc",
+                        fontSize: 11,
+                        color: "#64748b",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <span>5-yr trend:</span>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: tooltip.trend.affordability > 0 ? "#059669" : "#ef4444",
+                        }}
+                      >
+                        {tooltip.trend.affordability > 0 ? "↗" : "↘"} {tooltip.trend.affordability > 0 ? "Improving" : "Declining"}
+                      </span>
+                    </div>
+                  )}
+                  
                   <div
                     style={{
                       marginTop: 12,
@@ -1773,6 +1802,34 @@ export default function ExplorePage() {
                   >
                     {affordabilityStatus(tooltip.ratio).label}
                   </div>
+                  
+                  {/* Trend Indicator */}
+                  {tooltip.trend && tooltip.trend.affordability !== null && (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        padding: "6px 10px",
+                        borderRadius: 6,
+                        background: "#f8fafc",
+                        fontSize: 11,
+                        color: "#64748b",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <span>5-yr trend:</span>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: tooltip.trend.affordability > 0 ? "#059669" : "#ef4444",
+                        }}
+                      >
+                        {tooltip.trend.affordability > 0 ? "↗" : "↘"} {tooltip.trend.affordability > 0 ? "Improving" : "Declining"}
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
               

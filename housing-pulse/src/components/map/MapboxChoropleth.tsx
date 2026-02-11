@@ -27,6 +27,12 @@ export interface CountyTooltipData {
   population: number;
   unemployment: number | null;
   costBurden: number | null;
+  trend: {
+    homeValue: number | null;
+    rent: number | null;
+    income: number | null;
+    affordability: number | null;  // Positive = improving, Negative = declining
+  } | null;
   x: number;
   y: number;
 }
@@ -259,17 +265,19 @@ export default function MapboxChoropleth({
         if (cancelled) return;
 
         try {
-          // Fetch county boundaries + our data in parallel
-          const [topoRes, stateTopoRes, dataRes] = await Promise.all([
+          // Fetch county boundaries + our data + trends in parallel
+          const [topoRes, stateTopoRes, dataRes, trendsRes] = await Promise.all([
             fetch(COUNTIES_TOPO_URL),
             fetch(STATES_TOPO_URL),
             fetch("/data/counties_acs.json"),
+            fetch("/data/counties_acs_trends_sample.json").catch(() => null), // Optional
           ]);
 
-          const [topo, stateTopo, countyData] = await Promise.all([
+          const [topo, stateTopo, countyData, trendData] = await Promise.all([
             topoRes.json() as Promise<Topology>,
             stateTopoRes.json() as Promise<Topology>,
             dataRes.json(),
+            trendsRes ? trendsRes.json() : Promise.resolve({}),
           ]);
 
           if (cancelled) return;
@@ -290,6 +298,9 @@ export default function MapboxChoropleth({
                 ? ((data.median_gross_rent * 12) / data.median_household_income) * 100
                 : null;
               
+              // Get trend data if available
+              const trend = trendData[fips]?.growth || null;
+              
               feat.properties = {
                 fips,
                 name: data.county_name || data.name || "",
@@ -304,6 +315,11 @@ export default function MapboxChoropleth({
                 pct_cost_burdened_renters: data.pct_cost_burdened_renters,
                 vacancy_rate: data.vacancy_rate,
                 homeownership_rate: data.homeownership_rate,
+                // Trend data
+                trend_home_value: trend?.home_value || null,
+                trend_rent: trend?.rent || null,
+                trend_income: trend?.income || null,
+                trend_affordability: trend?.affordability_trend || null,
               };
             } else {
               feat.properties = { fips, name: "", state: "" };
@@ -445,6 +461,12 @@ export default function MapboxChoropleth({
           population: props.population,
           unemployment: props.unemployment_rate,
           costBurden: props.pct_cost_burdened_renters,
+          trend: props.trend_affordability !== undefined && props.trend_affordability !== null ? {
+            homeValue: props.trend_home_value,
+            rent: props.trend_rent,
+            income: props.trend_income,
+            affordability: props.trend_affordability,
+          } : null,
           x: e.point.x,
           y: e.point.y,
         });
