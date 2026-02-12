@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { MAP_METRICS, type MapMetricKey } from "@/lib/constants";
 
 const cardStyle = {
@@ -36,12 +37,42 @@ interface MapControlsProps {
   onIncomeRangeChange: (range: [number, number]) => void;
 }
 
+interface PendingFilters {
+  metric: string;
+  incomeRange: [number, number];
+}
+
 export default function MapControls({
   selectedMetric,
   onMetricChange,
   incomeRange,
   onIncomeRangeChange,
 }: MapControlsProps) {
+  // Pending state for filters (before user clicks Apply)
+  const [pendingMetric, setPendingMetric] = useState(selectedMetric);
+  const [pendingIncomeRange, setPendingIncomeRange] = useState<[number, number]>(incomeRange);
+
+  // Sync pending state when props change (e.g., on initial load)
+  useEffect(() => {
+    setPendingMetric(selectedMetric);
+  }, [selectedMetric]);
+
+  useEffect(() => {
+    setPendingIncomeRange(incomeRange);
+  }, [incomeRange]);
+
+  // Check if filters have changed
+  const filtersChanged = 
+    pendingMetric !== selectedMetric ||
+    pendingIncomeRange[0] !== incomeRange[0] ||
+    pendingIncomeRange[1] !== incomeRange[1];
+
+  // Apply filters
+  const handleApplyFilters = () => {
+    onMetricChange(pendingMetric);
+    onIncomeRangeChange(pendingIncomeRange);
+  };
+
   // Simplified metric options for the demo (matching the demo JSX)
   const metricOptions = [
     { key: "ratio", label: "Affordability Ratio", desc: "Home Value ÷ Income" },
@@ -61,7 +92,7 @@ export default function MapControls({
         {metricOptions.map((m) => (
           <button
             key={m.key}
-            onClick={() => onMetricChange(m.key)}
+            onClick={() => setPendingMetric(m.key)}
             style={{
               display: "block",
               width: "100%",
@@ -69,11 +100,11 @@ export default function MapControls({
               padding: "12px 14px",
               borderRadius: 10,
               border:
-                selectedMetric === m.key
+                pendingMetric === m.key
                   ? "1px solid #3b82f6"
                   : "1px solid #e2e8f0",
               background:
-                selectedMetric === m.key ? "#3b82f620" : "transparent",
+                pendingMetric === m.key ? "#3b82f620" : "transparent",
               cursor: "pointer",
               marginBottom: 6,
               transition: "all 0.2s",
@@ -84,7 +115,7 @@ export default function MapControls({
               style={{
                 fontSize: 13,
                 fontWeight: 600,
-                color: selectedMetric === m.key ? "#2563eb" : "#0f172a",
+                color: pendingMetric === m.key ? "#2563eb" : "#0f172a",
               }}
             >
               {m.label}
@@ -112,7 +143,7 @@ export default function MapControls({
             marginBottom: 12,
           }}
         >
-          ${incomeRange[0]}K - ${incomeRange[1]}K
+          ${pendingIncomeRange[0]}K - ${pendingIncomeRange[1]}K
         </div>
         <div style={{ marginBottom: 8 }}>
           <label
@@ -124,11 +155,11 @@ export default function MapControls({
             type="range"
             min={10}
             max={150}
-            value={incomeRange[0]}
+            value={pendingIncomeRange[0]}
             onChange={(e) =>
-              onIncomeRangeChange([
+              setPendingIncomeRange([
                 +e.target.value,
-                Math.max(+e.target.value + 10, incomeRange[1]),
+                Math.max(+e.target.value + 10, pendingIncomeRange[1]),
               ])
             }
             style={{ width: "100%", accentColor: "#3b82f6" }}
@@ -144,10 +175,10 @@ export default function MapControls({
             type="range"
             min={20}
             max={200}
-            value={incomeRange[1]}
+            value={pendingIncomeRange[1]}
             onChange={(e) =>
-              onIncomeRangeChange([
-                Math.min(incomeRange[0], +e.target.value - 10),
+              setPendingIncomeRange([
+                Math.min(pendingIncomeRange[0], +e.target.value - 10),
                 +e.target.value,
               ])
             }
@@ -155,6 +186,37 @@ export default function MapControls({
           />
         </div>
       </div>
+
+      {/* Apply Filters Button */}
+      {filtersChanged && (
+        <button
+          onClick={handleApplyFilters}
+          style={{
+            width: "100%",
+            padding: "14px 20px",
+            borderRadius: 10,
+            border: "none",
+            background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+            color: "#ffffff",
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "transform 0.15s, box-shadow 0.15s",
+            boxShadow: "0 2px 8px rgba(59,130,246,0.3)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,130,246,0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 2px 8px rgba(59,130,246,0.3)";
+          }}
+        >
+          Apply Filters
+        </button>
+      )}
 
       {/* Legend */}
       <div style={cardStyle}>
