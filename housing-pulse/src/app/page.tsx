@@ -247,21 +247,18 @@ const KPI_CARDS = [
 const MOST_AFFORDABLE_STATES = [
   {
     name: "West Virginia",
-    abbr: "WV",
     ratio: 1.9,
     unemployment: "5.2%",
     popTrend: "declining",
   },
   {
     name: "Mississippi",
-    abbr: "MS",
     ratio: 2.0,
     unemployment: "5.4%",
     popTrend: "declining",
   },
   {
     name: "Arkansas",
-    abbr: "AR",
     ratio: 2.1,
     unemployment: "3.5%",
     popTrend: "stable",
@@ -271,21 +268,18 @@ const MOST_AFFORDABLE_STATES = [
 const LEAST_AFFORDABLE_STATES = [
   {
     name: "Hawaii",
-    abbr: "HI",
     ratio: 8.9,
     unemployment: "3.1%",
     popTrend: "stable",
   },
   {
     name: "California",
-    abbr: "CA",
     ratio: 8.2,
     unemployment: "4.8%",
     popTrend: "declining",
   },
   {
     name: "Massachusetts",
-    abbr: "MA",
     ratio: 6.4,
     unemployment: "3.0%",
     popTrend: "growing",
@@ -907,7 +901,7 @@ export default function OverviewPage() {
 
                 {MOST_AFFORDABLE_STATES.map((state, i) => (
                   <div
-                    key={state.abbr}
+                    key={state.name}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -974,7 +968,7 @@ export default function OverviewPage() {
 
                 {LEAST_AFFORDABLE_STATES.map((state, i) => (
                   <div
-                    key={state.abbr}
+                    key={state.name}
                     style={{
                       display: "flex",
                       alignItems: "center",
