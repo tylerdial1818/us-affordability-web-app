@@ -230,6 +230,78 @@ export function computeFilteredSummary(
   };
 }
 
+// ─── MORTGAGE & PAYMENT CALCULATIONS ─────────────────────────────
+
+/**
+ * Calculate standard down payment amount (typically 20%)
+ * @param homeValue - Home price
+ * @param downPaymentPct - Down payment percentage (default 20%)
+ * @returns Down payment amount
+ */
+export function calculateDownPayment(
+  homeValue: number | null,
+  downPaymentPct: number = 0.20
+): number | null {
+  if (!homeValue || homeValue <= 0) return null;
+  return Math.round(homeValue * downPaymentPct);
+}
+
+/**
+ * Calculate monthly mortgage payment (principal + interest only)
+ * @param homeValue - Home price
+ * @param downPaymentPct - Down payment percentage (default 0.20 = 20%)
+ * @param annualInterestRate - Annual interest rate (default 0.07 = 7%)
+ * @param years - Loan term in years (default 30)
+ * @returns Monthly payment amount
+ */
+export function calculateMonthlyPayment(
+  homeValue: number | null,
+  downPaymentPct: number = 0.20,
+  annualInterestRate: number = 0.07,
+  years: number = 30
+): number | null {
+  if (!homeValue || homeValue <= 0) return null;
+  
+  const downPayment = homeValue * downPaymentPct;
+  const principal = homeValue - downPayment;
+  const monthlyRate = annualInterestRate / 12;
+  const numPayments = years * 12;
+  
+  // Standard mortgage payment formula: M = P[r(1+r)^n]/[(1+r)^n - 1]
+  const payment = 
+    (principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments))) / 
+    (Math.pow(1 + monthlyRate, numPayments) - 1);
+  
+  return Math.round(payment);
+}
+
+/**
+ * Calculate full monthly housing cost including taxes and insurance estimates
+ * @param homeValue - Home price
+ * @param downPaymentPct - Down payment percentage (default 0.20)
+ * @param annualInterestRate - Annual interest rate (default 0.07)
+ * @param years - Loan term in years (default 30)
+ * @param propertyTaxRate - Annual property tax rate (default 0.011 = 1.1%)
+ * @param insuranceRate - Annual insurance rate (default 0.0035 = 0.35%)
+ * @returns Total monthly payment (PITI: Principal, Interest, Taxes, Insurance)
+ */
+export function calculateFullMonthlyPayment(
+  homeValue: number | null,
+  downPaymentPct: number = 0.20,
+  annualInterestRate: number = 0.07,
+  years: number = 30,
+  propertyTaxRate: number = 0.011,
+  insuranceRate: number = 0.0035
+): number | null {
+  const piPayment = calculateMonthlyPayment(homeValue, downPaymentPct, annualInterestRate, years);
+  if (!piPayment || !homeValue) return null;
+  
+  const monthlyTax = (homeValue * propertyTaxRate) / 12;
+  const monthlyInsurance = (homeValue * insuranceRate) / 12;
+  
+  return Math.round(piPayment + monthlyTax + monthlyInsurance);
+}
+
 // ─── LEGACY COMPAT (used by existing components) ─────────────────
 
 export const calcAffordabilityRatio = affordabilityRatio;
