@@ -13,6 +13,8 @@ import {
   affordabilityGap,
   gapText,
   affordabilityStatus,
+  calculateDownPayment,
+  calculateMonthlyPayment,
 } from "@/lib/calculations";
 import { formatCurrency } from "@/lib/utils";
 
@@ -53,7 +55,7 @@ const sectionTitleStyle = {
 const TOP_PICKS = [
   {
     county: "McDowell County",
-    state: "WV",
+    state: "West Virginia",
     medianHomeValue: 38500,
     unemployment: 9.8,
     growth: "Stable",
@@ -61,7 +63,7 @@ const TOP_PICKS = [
   },
   {
     county: "Phillips County",
-    state: "AR",
+    state: "Arkansas",
     medianHomeValue: 58200,
     unemployment: 5.4,
     growth: "Growing",
@@ -69,7 +71,7 @@ const TOP_PICKS = [
   },
   {
     county: "Macon County",
-    state: "AL",
+    state: "Alabama",
     medianHomeValue: 52000,
     unemployment: 4.9,
     growth: "Growing",
@@ -369,9 +371,78 @@ export default function ExplorePage() {
                       fontSize: 11,
                       color: "#6b7280",
                       fontStyle: "italic",
+                      marginBottom: 12,
                     }}
                   >
                     Based on the 3x income guideline
+                  </div>
+                  
+                  {/* Estimated Costs */}
+                  <div
+                    style={{
+                      borderTop: "1px solid #d1fae5",
+                      paddingTop: 12,
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: "#6b7280",
+                          marginBottom: 4,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.03em",
+                        }}
+                      >
+                        Down Payment (20%)
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'DM Mono', monospace",
+                          fontSize: 16,
+                          fontWeight: 600,
+                          color: "#059669",
+                        }}
+                      >
+                        {formatCurrency(calculateDownPayment(affordablePrice) || 0)}
+                      </div>
+                    </div>
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: "#6b7280",
+                          marginBottom: 4,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.03em",
+                        }}
+                      >
+                        Monthly Payment
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'DM Mono', monospace",
+                          fontSize: 16,
+                          fontWeight: 600,
+                          color: "#059669",
+                        }}
+                      >
+                        {formatCurrency(calculateMonthlyPayment(affordablePrice) || 0)}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: "#94a3b8",
+                      marginTop: 8,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    Assumes 7% interest, 30-year mortgage
                   </div>
                 </div>
 
