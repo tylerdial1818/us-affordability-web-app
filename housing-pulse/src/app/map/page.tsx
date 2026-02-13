@@ -57,18 +57,20 @@ export default function MapPage() {
             display: "grid",
             gridTemplateColumns: "280px 1fr",
             gap: 20,
-            minHeight: "calc(100vh - 140px)",
+            height: "calc(100vh - 140px)",
           }}
         >
           {/* Sidebar Controls */}
-          <MapControls
-            selectedMetric={mapMetric}
-            onMetricChange={setMapMetric}
-            incomeRange={incomeRange}
-            onIncomeRangeChange={setIncomeRange}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
+          <div style={{ overflowY: "auto", maxHeight: "100%" }}>
+            <MapControls
+              selectedMetric={mapMetric}
+              onMetricChange={setMapMetric}
+              incomeRange={incomeRange}
+              onIncomeRangeChange={setIncomeRange}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+          </div>
 
           {/* Map Area */}
           <div
@@ -77,6 +79,7 @@ export default function MapPage() {
               padding: 0,
               display: "flex",
               flexDirection: "column",
+              height: "100%",
             }}
           >
             <div
@@ -129,8 +132,8 @@ export default function MapPage() {
               style={{
                 flex: 1,
                 padding: 20,
-                minHeight: 500,
                 position: "relative",
+                overflow: "hidden",
               }}
             >
               <USMap 
