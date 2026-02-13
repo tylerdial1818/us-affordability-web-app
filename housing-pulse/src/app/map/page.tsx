@@ -34,15 +34,20 @@ export default function MapPage() {
     <div
       style={{
         background: "#f8fafc",
-        minHeight: "100vh",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
         fontFamily: "'DM Sans', sans-serif",
         color: "#0f172a",
+        overflow: "hidden",
       }}
     >
       <Navigation />
       <div
         style={{
+          flex: 1,
           maxWidth: 1360,
+          width: "100%",
           margin: "0 auto",
           padding: "28px 32px",
           opacity: animIn ? 1 : 0,
@@ -50,6 +55,9 @@ export default function MapPage() {
           transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
           position: "relative",
           zIndex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
         }}
       >
         <div
@@ -57,11 +65,12 @@ export default function MapPage() {
             display: "grid",
             gridTemplateColumns: "280px 1fr",
             gap: 20,
-            height: "calc(100vh - 140px)",
+            flex: 1,
+            minHeight: 0,
           }}
         >
           {/* Sidebar Controls */}
-          <div style={{ overflowY: "auto", maxHeight: "100%" }}>
+          <div style={{ overflowY: "auto", minHeight: 0 }}>
             <MapControls
               selectedMetric={mapMetric}
               onMetricChange={setMapMetric}
