@@ -6,6 +6,8 @@ import Navigation from "@/components/shared/Navigation";
 import Footer from "@/components/shared/Footer";
 import ExplainedMetric from "@/components/shared/ExplainedMetric";
 import { useIncome } from "@/components/shared/IncomeContext";
+import NationalRentKPI from "@/components/insights/NationalRentKPI";
+import RentVsBuyMarkets from "@/components/insights/RentVsBuyMarkets";
 import {
   generateAffordabilityTrend,
   STATES_DATA,
@@ -564,6 +566,20 @@ export default function OverviewPage() {
                 </p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ═══════════ RENT INSIGHTS ═══════════ */}
+        <section style={{ marginBottom: 56 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 16,
+            }}
+          >
+            <NationalRentKPI />
+            <RentVsBuyMarkets />
           </div>
         </section>
 

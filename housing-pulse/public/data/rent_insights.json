@@ -1,0 +1,217 @@
+{
+  "national_median_rent": 848,
+  "pct_counties_affordable": 99.22142634693242,
+  "median_ptr": 17.1,
+  "buy_better_count": 1013,
+  "rent_better_count": 926,
+  "state_rankings": [
+    [
+      "District of Columbia",
+      1900
+    ],
+    [
+      "Hawaii",
+      1836.5
+    ],
+    [
+      "New Jersey",
+      1553
+    ],
+    [
+      "California",
+      1528
+    ],
+    [
+      "Massachusetts",
+      1483.5
+    ],
+    [
+      "Maryland",
+      1368.5
+    ],
+    [
+      "Connecticut",
+      1351
+    ],
+    [
+      "Rhode Island",
+      1303
+    ],
+    [
+      "Delaware",
+      1285
+    ],
+    [
+      "New Hampshire",
+      1256.0
+    ],
+    [
+      "Alaska",
+      1243.0
+    ],
+    [
+      "Florida",
+      1230
+    ],
+    [
+      "Oregon",
+      1140.0
+    ],
+    [
+      "Nevada",
+      1128.0
+    ],
+    [
+      "Washington",
+      1119
+    ],
+    [
+      "Colorado",
+      1109.5
+    ],
+    [
+      "Vermont",
+      1091.5
+    ],
+    [
+      "Virginia",
+      1043
+    ],
+    [
+      "Utah",
+      1018
+    ],
+    [
+      "Arizona",
+      983
+    ],
+    [
+      "Maine",
+      967.5
+    ],
+    [
+      "New York",
+      942.5
+    ],
+    [
+      "Texas",
+      929
+    ],
+    [
+      "Wyoming",
+      913
+    ],
+    [
+      "South Carolina",
+      878.0
+    ],
+    [
+      "Idaho",
+      876.5
+    ],
+    [
+      "Minnesota",
+      873
+    ],
+    [
+      "Pennsylvania",
+      868
+    ],
+    [
+      "North Carolina",
+      859.5
+    ],
+    [
+      "Wisconsin",
+      859.5
+    ],
+    [
+      "Indiana",
+      850.0
+    ],
+    [
+      "Georgia",
+      847
+    ],
+    [
+      "Michigan",
+      845
+    ],
+    [
+      "Ohio",
+      832.5
+    ],
+    [
+      "Oklahoma",
+      811
+    ],
+    [
+      "New Mexico",
+      810
+    ],
+    [
+      "Louisiana",
+      806
+    ],
+    [
+      "Tennessee",
+      804
+    ],
+    [
+      "Montana",
+      801.0
+    ],
+    [
+      "Iowa",
+      800
+    ],
+    [
+      "Illinois",
+      793.0
+    ],
+    [
+      "Nebraska",
+      772
+    ],
+    [
+      "Alabama",
+      762
+    ],
+    [
+      "Kansas",
+      758
+    ],
+    [
+      "Kentucky",
+      756.0
+    ],
+    [
+      "North Dakota",
+      756
+    ],
+    [
+      "Mississippi",
+      755.5
+    ],
+    [
+      "Missouri",
+      754
+    ],
+    [
+      "West Virginia",
+      753
+    ],
+    [
+      "South Dakota",
+      730.0
+    ],
+    [
+      "Arkansas",
+      727
+    ],
+    [
+      "Puerto Rico",
+      521.5
+    ]
+  ]
+}

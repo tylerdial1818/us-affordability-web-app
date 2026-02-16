@@ -18,6 +18,8 @@ import {
 } from "recharts";
 import Navigation from "@/components/shared/Navigation";
 import Footer from "@/components/shared/Footer";
+import BedroomCalculator from "@/components/insights/BedroomCalculator";
+import RentAffordabilityExplorer from "@/components/insights/RentAffordabilityExplorer";
 import {
   STATES_DATA,
   getScatterData,
@@ -760,6 +762,12 @@ export default function ResearchPage() {
 
   const renderExplorerTab = () => (
     <div>
+      {/* Rent Insights Tools */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
+        <BedroomCalculator />
+        <RentAffordabilityExplorer />
+      </div>
+
       {/* Placeholder Message */}
       <div
         style={{
