@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import Navigation from "@/components/shared/Navigation";
 import Footer from "@/components/shared/Footer";
+import RentBreakdown from "@/components/dashboard/RentBreakdown";
 import { getMockCountyData, US_STATES_SVG } from "@/lib/data";
 import {
   formatCurrency,
@@ -446,6 +447,18 @@ export default function CountyDetailPage({
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+
+        {/* Rent Breakdown */}
+        <div style={{ marginBottom: 28 }}>
+          <RentBreakdown
+            fmr_0br={county.fmr_0br}
+            fmr_1br={county.fmr_1br}
+            fmr_2br={county.fmr_2br}
+            fmr_3br={county.fmr_3br}
+            fmr_4br={county.fmr_4br}
+            rent_trend_5yr={county.rent_trend_5yr}
+          />
         </div>
 
         {/* Demographic Details */}

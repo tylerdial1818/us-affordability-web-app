@@ -32,6 +32,13 @@ export interface CountyMetrics {
   // Zillow-derived
   yoy_appreciation: number | null;
   five_year_cagr: number | null;
+  // HUD Fair Market Rents
+  fmr_0br?: number;
+  fmr_1br?: number;
+  fmr_2br?: number;
+  fmr_3br?: number;
+  fmr_4br?: number;
+  rent_trend_5yr?: number;
 }
 
 export interface AreaData {
